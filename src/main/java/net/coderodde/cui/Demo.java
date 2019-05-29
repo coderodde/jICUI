@@ -1,8 +1,6 @@
 package net.coderodde.cui;
 
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import net.coderodde.cui.impl.Label;
 
 /**
  *
@@ -11,7 +9,7 @@ import java.util.logging.Logger;
 public class Demo {
     
     public static void main(String[] args) {
-        String s = "\n\na\n\nb\n";
-        System.out.println(s.trim().split("\n+").length);
+        Window window = new Window(new Label("\n\nHello\nworld\n!\n"));
+        System.out.println(window.toString());
     }
 }

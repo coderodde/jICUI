@@ -1,5 +1,7 @@
 package net.coderodde.cui;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -23,22 +25,37 @@ public abstract class AbstractComponent {
         BOTTOM
     }
     
+    /**
+     * The vertical stack of components.
+     */
+    private final List<AbstractComponent> components = new ArrayList<>();
+    private final List<BorderType> borderTypes = new ArrayList<>();
+    
+    // Border types:
     protected BorderType topBorderType    = BorderType.SINGLE_BAR_BORDER;
     protected BorderType bottomBorderType = BorderType.SINGLE_BAR_BORDER;
     protected BorderType leftBorderType   = BorderType.SINGLE_BAR_BORDER;
     protected BorderType rightBorderType  = BorderType.SINGLE_BAR_BORDER;
+    
+    // Round corners:
     protected boolean roundTopLeftCorner;
     protected boolean roundTopRightCorner;
     protected boolean roundBottomLeftCorner;
     protected boolean roundBottomRightCorner;
+    
+    // Dimensions:
     protected int preferredWidth;
     protected int preferredHeight;
     protected int minimumWidth;
     protected int minimumHeight;
+    
+    // Margin thickness:
     protected int topMarginThickness;
     protected int bottomMarginThickness;
     protected int leftMarginThickness;
     protected int rightMarginThickness;
+    
+    // Padding thickness:
     protected int topPaddingThickness;
     protected int bottomPaddingThickness;
     protected int leftPaddingThickness;
@@ -83,11 +100,13 @@ public abstract class AbstractComponent {
     }
     
     public int getPreferredWidth() {
-        return preferredWidth;
+        return (preferredWidth = Math.max(preferredWidth,
+                                          getAbsoluteMinimumWidth()));
     }
     
     public int getPreferredHeight() {
-        return  preferredHeight;
+        return (preferredHeight = Math.max(preferredHeight, 
+                                           getAbsoluteMinimumHeight()));
     }
     
     public int getTopMarginThickness() {
@@ -263,8 +282,45 @@ public abstract class AbstractComponent {
         renderTopRightCorner(matrix);
         renderBottomLeftCorner(matrix);
         renderBottomRightCorner(matrix);
-        renderContent(matrix);
+        renderContent();
         return matrix;
+    }
+    
+    private void renderBottomLeftCorner(char[][] matrix) {
+        
+    }
+    
+    private void renderBottomRightCorner(char[][] matrix) {
+        
+    }
+    
+    private void renderTopLeftCorner(char[][] matrix) {
+        int topLeftCornerX = getLeftMarginThickness();
+        int topLeftCornerY = getRightMarginThickness();
+        
+        char below = matrix[topLeftCornerY + 1][topLeftCornerX];
+        char toTheRight = matrix[topLeftCornerY][topLeftCornerX + 1];
+        
+        if (below == CHAR_SINGLE_HORIZONTAL_BAR) {
+            if (toTheRight == CHAR_SINGLE_HORIZONTAL_BAR) {
+                matrix[topLeftCornerY][topLeftCornerX] = '\u250c';
+            } else if (toTheRight == CHAR_DOUBLE_HORIZONTAL_BAR) {
+                matrix[topLeftCornerY][topLeftCornerX] = '\u2552';
+            }
+        } else if (below == CHAR_DOUBLE_HORIZONTAL_BAR) {
+            if (toTheRight == CHAR_SINGLE_HORIZONTAL_BAR) {
+                matrix[topLeftCornerY][topLeftCornerX] = '\u2553';
+            } else if (toTheRight == CHAR_DOUBLE_HORIZONTAL_BAR) {
+                matrix[topLeftCornerY][topLeftCornerX] = '\u2554';
+            }
+        } else {
+            throw new IllegalStateException(
+                    "Strange characters close to the left corner character.");
+        }
+    }
+    
+    private void renderTopRightCorner(char[][] matrix) {
+        
     }
     
     private void renderTopBorder(char[][] matrix) {
@@ -285,10 +341,9 @@ public abstract class AbstractComponent {
         }
         
         int y = getTopMarginThickness();
-        int x = getLeftMarginThickness() - 
-                (leftBorderType != BorderType.NON_EXISTING_BORDER ? 1 : 0);
+        int x = getLeftMarginThickness();
         
-        renderVerticalBorder(matrix, borderWidth, x, y);
+        renderHorizontalBorder(matrix, borderWidth, x, y);
     }
     
     private void renderBottomBorder(char[][] matrix) {
@@ -312,8 +367,7 @@ public abstract class AbstractComponent {
                 (topBorderType != BorderType.NON_EXISTING_BORDER ? 1 : 0) +
                 getContentHeight();
         
-        int x = getLeftMarginThickness() -
-                (leftBorderType != BorderType.NON_EXISTING_BORDER ? 1 : 0);
+        int x = getLeftMarginThickness();
         
         renderHorizontalBorder(matrix, borderWidth, x, y);
     }
@@ -339,7 +393,7 @@ public abstract class AbstractComponent {
                 (topBorderType != BorderType.NON_EXISTING_BORDER ? 1 : 0);
         
         int x = getLeftMarginThickness();
-        renderHorizontalBorder(matrix, borderHeight, x, y);
+        renderVerticalBorder(matrix, borderHeight, x, y);
     }
     
     private void renderRightBorder(char[][] matrix) {
@@ -362,8 +416,8 @@ public abstract class AbstractComponent {
         int y = getTopMarginThickness() +
                 (topBorderType != BorderType.NON_EXISTING_BORDER ? 1 : 0);
         
-        int x = getPreferredWidth() - getRightMarginThickness();
-        renderHorizontalBorder(matrix, borderHeight, x, y);
+        int x = getPreferredWidth() - 1 - getRightMarginThickness();
+        renderVerticalBorder(matrix, borderHeight, x, y);
     }
     
     /**
@@ -379,11 +433,11 @@ public abstract class AbstractComponent {
                                         int y) {
         if (leftBorderType == BorderType.SINGLE_BAR_BORDER) {
             for (int w = 0; w < borderHeight; w++) {
-                matrix[y + w][x] = CHAR_SINGLE_HORIZONTAL_BAR;
+                matrix[y][x + w] = CHAR_SINGLE_HORIZONTAL_BAR;
             }
         } else if (leftBorderType == BorderType.DOUBLE_BAR_BORDER) {
             for (int w = 0; w < borderHeight; w++) {
-                matrix[y + w][x] = CHAR_DOUBLE_HORIZONTAL_BAR;
+                matrix[y][x + w] = CHAR_DOUBLE_HORIZONTAL_BAR;
             }
         } else {
             throw new IllegalStateException(
